@@ -1,0 +1,231 @@
+var
+  MainForm : TclGameForm;  // Main game form
+  topPanel, midPanel : TclProPanel;  // UI panels for layout
+  allCountryList, updatedCountryList, queuedCountryList : TclArrayString;  // Lists to hold all countries, updated countries, and queued countries
+  countryLabel : TClProLabel;  // Label for displaying country emojis
+  choice1, choice2, choice3, choice4 : TClProButton;  // Buttons for country choices
+  btnList : array[4] of TClProButton;  // Array of buttons for random options
+  currCountry, currEmoji : String;  // Variables to hold the current country and its emoji
+  randomPick : Integer;  // Variable to store randomly picked country index
+  randomCountryNumber : Integer;  // Variable for randomly selected country number
+  correctCountLabel: TClProLabel;  // Label to display correct answers count
+  correctCounter : Integer;  // Counter for correct answers
+
+// Function to pick a random country, avoiding duplication of the correct answer   
+function PickRandomCountry(index : Integer) : Integer;
+{
+  // Check if the randomly picked country is already selected, avoid duplication
+  if(clGetStringAfter(updatedCountryList.GetItem(index)) == clGetStringAfter(allCountryList.GetItem(randomPick)))  //Avoid duplication of correct answer 
+  {
+    // Generate a new random country if it's a duplicate
+    while(clGetStringAfter(updatedCountryList.GetItem(index)) == clGetStringAfter(allCountryList.GetItem(randomPick)))
+    {
+      randomPick = clMath.GenerateRandom(0, allCountryList.Count);
+    }
+  }
+  Result = randomPick; // Return the randomly picked country index
+}
+
+// Procedure to manage the core gameplay  
+void GamePlay;
+var
+randomLoc, pickedCountry, i : Integer;
+{
+  clAnimateFloat(countryLabel,'Opacity',1, 1,0,0);
+  
+  randomCountryNumber = clMath.GenerateRandom(0, updatedCountryList.Count); // Select a random country from the updated list
+  currCountry = clGetStringAfter(updatedCountryList.GetItem(randomCountryNumber), '|');
+  currEmoji = clGetStringTo(updatedCountryList.GetItem(randomCountryNumber), '|');
+
+  countryLabel.Text = currEmoji;
+
+  // Choose a random button location for the correct answer
+  randomLoc = clMath.GenerateRandom(0, 4);  
+  
+  // Loop to assign countries to buttons
+  for (i = 0 to 3)  
+  {
+    randomPick = clMath.GenerateRandom(0, allCountryList.Count);
+    
+    if(i == randomLoc)  
+    {
+      btnList[i].Caption = currCountry;   // Set the correct answer to a random button
+    }
+    else
+    {
+      pickedCountry = PickRandomCountry(randomCountryNumber); // Pick a random wrong country for the other buttons
+      btnList[i].Caption = clGetStringAfter(allCountryList.GetItem(pickedCountry), '|');
+      
+      queuedCountryList.Add(allCountryList.GetItem(pickedCountry));  // Temporarily store the wrong answer in the queued list
+      allCountryList.RemoveAt(pickedCountry);  // Remove the wrong answer from the all country list to avoid duplication
+    }
+  }
+  
+  for(i = 0 to queuedCountryList.Count - 1)
+  {
+    allCountryList.Add(queuedCountryList.GetItem(i));    // Restore the temporarily removed wrong answers back into the full list
+  }
+  
+  queuedCountryList.RemoveAll;    // Clear the temporary list
+}
+  
+void BtnOnClick;  // Button click event handler
+var
+  clickedBtn : TClProButton;
+{
+  clickedBtn = TClProButton(MainForm.Clsender);
+  clAnimateFloat(countryLabel,'Opacity',0, 1,0,0);
+  
+  if(clickedBtn.Caption == currCountry)
+  {
+    ShowMessage('Correct');
+    correctCounter = correctCounter + 1;
+    // Update the correct answer count on the label
+    correctCountLabel.Text = IntToStr(correctCounter) + '/' + IntToStr(allCountryList.Count);
+    updatedCountryList.RemoveAt(randomCountryNumber);     // Remove the country from the updated list
+  }
+  else
+  {
+    ShowMessage('Wrong');
+  }
+  if(correctCounter <> allCountryList.Count)
+    GamePlay;   // Continue the game if there are still countries left
+  else
+    Clomosy.RunUnit('WinScreen'); // End the game and show win screen when all countries are guessed
+}  
+  
+
+// Procedure to fill the list of all countries with their emojis  
+void FillAllCountries;
+{
+  allCountryList.Add('🍔🗽🍕|United States');
+  allCountryList.Add('🍁🦫⛷️|Canada');
+  allCountryList.Add('🏖️⚽🍍|Brazil');
+  allCountryList.Add('🏰☕🍂|United Kingdom');
+  allCountryList.Add('🥖🗼🍷|France');
+  allCountryList.Add('🍺🏰🚗|Germany');
+  allCountryList.Add('🍕🎭🏛️|Italy');
+  allCountryList.Add('⚽🍇🎉|Spain');
+  allCountryList.Add('🍣🎎🗾|Japan');
+  allCountryList.Add('🥡🐉🏮|China');
+  allCountryList.Add('🕌🪔🌶️|India');
+  allCountryList.Add('🌮🎉🪅|Mexico');
+  allCountryList.Add('🦘🏄‍♂️🏜️|Australia');
+  allCountryList.Add('🦁🌍🏞️|South Africa');
+  allCountryList.Add('🥟❄️🏰|Russia');
+  allCountryList.Add('🕌🍖🏝️|Turkey');
+  allCountryList.Add('🥩🏞️⚽|Argentina');
+  allCountryList.Add('🕋🏜️☀️|Saudi Arabia');
+  allCountryList.Add('🎿🏔️🌲|Norway');
+  allCountryList.Add('🥧❄️🛶|Sweden');
+  allCountryList.Add('🧀🏔️🕰️|Switzerland');
+  allCountryList.Add('🌷🚲🏞️|Netherlands');
+  allCountryList.Add('🏙️🕌🛥️|United Arab Emirates');
+  allCountryList.Add('🏝️🍍🎋|Philippines');
+  allCountryList.Add('🍜🎎🏯|South Korea');
+  allCountryList.Add('🕍✡️🏖️|Israel');
+  allCountryList.Add('🏛️🍇🏖️|Greece');
+  allCountryList.Add('🏖️🍷⚽|Portugal');
+  allCountryList.Add('🦙⛰️🌊|New Zealand');
+  allCountryList.Add('🍀🍺🏰|Ireland');
+  allCountryList.Add('🍫🏰🍟|Belgium');
+  allCountryList.Add('🏰⛷️🎶|Austria');
+  allCountryList.Add('🛳️🏰🍪|Denmark');
+  allCountryList.Add('❄️🌲🦌|Finland');
+  allCountryList.Add('🏙️🍜🦁|Singapore');
+  allCountryList.Add('🏰🥟🎄|Poland');
+  allCountryList.Add('🌴🕌🎷|Nigeria');
+  allCountryList.Add('☕🏞️💃|Colombia');
+  allCountryList.Add('🌍🦒🏞️|Kenya');
+  allCountryList.Add('🏝️🍍🏞️|Malaysia');
+}
+
+void FillUpdatedCountries;
+var
+i : Integer;
+{
+  for(i = 0 to allCountryList.Count-1)
+  {
+    updatedCountryList.Add(allCountryList.GetItem(i));
+  }
+}
+
+{ 
+  MainForm = TclGameForm.Create(Self);
+  MainForm.SetFormColor('#CBEDD5','',clGNone);
+  
+  allCountryList = TclArrayString.Create;
+  updatedCountryList = TclArrayString.Create;
+  FillAllCountries;
+  FillUpdatedCountries;
+
+  correctCounter = 0;
+  
+  queuedCountryList = TclArrayString.Create;
+  
+  topPanel = MainForm.AddNewProPanel(MainForm,'topPanel');
+  topPanel.Height = MainForm.clHeight * 0.3;
+  clComponent.SetupComponent(topPanel,'{"Align" : "Top", "BackgroundColor":"#62de83"}');
+  
+
+  countryLabel = MainForm.AddNewProLabel(topPanel,'proLbl1','');
+  countryLabel.Width = topPanel.Width * 0.6;
+  countryLabel.Height = topPanel.Height * 0.4;
+  clComponent.SetupComponent(countryLabel,'{"Align" : "Center", "TextSize" : 32, "TextVerticalAlign":"center", "TextHorizontalAlign":"center" }');
+
+
+  midPanel = MainForm.AddNewProPanel(MainForm,'midPanel');
+  midPanel.Height = MainForm.clHeight * 0.5;
+  midPanel.Width = MainForm.clWidth;
+  clComponent.SetupComponent(midPanel,'{"Align" : "Center", "BackgroundColor": "#d3de62"}');
+  
+  
+  choice1 = MainForm.AddNewProButton(midPanel,'choice1','DENEME');
+  choice1.Margins.Bottom = midPanel.Height * 0.8;
+  choice1.Width = midPanel.Width * 0.6;
+  choice1.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(choice1, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  
+  choice2 = MainForm.AddNewProButton(midPanel,'choice2','');
+  choice2.Margins.Bottom = midPanel.Height * 0.4;
+  choice2.Width = midPanel.Width * 0.6;
+  choice2.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(choice2, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  
+  choice3 = MainForm.AddNewProButton(midPanel,'choice3','');
+  choice3.Width = midPanel.Width * 0.6;
+  choice3.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(choice3, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  
+  choice4 = MainForm.AddNewProButton(midPanel,'choice4','');
+  choice4.Margins.Top = midPanel.Height * 0.4;
+  choice4.Width = midPanel.Width * 0.6;
+  choice4.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(choice4, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  
+  choice1.OnClick = 'BtnOnClick';
+  choice2.OnClick = 'BtnOnClick';
+  choice3.OnClick = 'BtnOnClick';
+  choice4.OnClick = 'BtnOnClick';
+  
+  btnList[0] = choice1;
+  btnList[1] = choice2;
+  btnList[2] = choice3;
+  btnList[3] = choice4;
+  
+  correctCountLabel = MainForm.AddNewProLabel(topPanel,'correctCountLabel','0');
+  correctCountLabel.Align = alMostTop
+  correctCountLabel.Margins.Top = 20;
+  correctCountLabel.Margins.Right =  topPanel.Width * 0.8;
+  clComponent.SetupComponent(correctCountLabel,'{"TextSize" : 18, "TextVerticalAlign":"center", "TextHorizontalAlign":"center", "TextBold" : "yes" }');
+
+  correctCountLabel.Text = correctCountLabel.Text + '/' + IntToStr(allCountryList.Count);
+  
+  GamePlay;
+  
+  MainForm.Run;
+}

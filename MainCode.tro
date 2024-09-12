@@ -1,0 +1,222 @@
+var 
+MainForm : TclGameForm;
+topPanel, midPanel : TclProPanel;
+mailField, passwordField, nameField, surnameField : TclProEdit;
+signInButton, signUpButton : TClProButton;
+titleLbl, signUpLbl : TClProLabel;
+isSignUpClicked : Boolean;
+logoImg : TClProImage;
+
+
+void CreateTable;  // Create Initial Database Table
+{
+  try
+  {
+    Clomosy.DBSQLiteConnect(Clomosy.AppFilesPath + 'ProjectQuiz.db3', '');
+    Clomosy.DBSQLiteQuery.SQL.Text = 
+      'CREATE TABLE IF NOT EXISTS Users (' +
+      'UserID INTEGER PRIMARY KEY AUTOINCREMENT,' + 
+      'Email TEXT NOT NULL UNIQUE,' + 
+      'FirstName TEXT NOT NULL,' + 
+      'LastName TEXT NOT NULL,' + 
+      'Password TEXT NOT NULL' + 
+      ')';
+    Clomosy.DBSQLiteQuery.OpenOrExecute();
+  }
+  except
+    ShowMessage('Exception class: ' + LastExceptionClassName + ' Exception Message: ' + LastExceptionMessage);
+  }
+}
+
+
+function CheckBlanks : Boolean;
+var
+inputMail, inputPassword, inputName, inputSName : Integer;
+{
+  inputMail = Length(mailField.Text);
+  inputPassword = Length(passwordField.Text);
+  inputName = Length(nameField.Text);
+  inputSName = Length(surnameField.Text);
+  
+  if((inputMail == 0) || (inputPassword == 0) || (inputName == 0) || (inputSName == 0))
+  {
+    ShowMessage('You cannot leave blanks empty');
+    Result = False;
+  }
+  else
+    Result = True;
+}
+
+void VirtualKeyboardShow;
+{
+  midPanel.Margins.Bottom = MainForm.clVKBoundsHeight;
+}
+ 
+void VirtualKeyboardHidden;
+{
+  midPanel.Margins.Bottom = 0;
+}
+ 
+void ResetTexts;
+{
+  mailField.Text = '';
+  passwordField.Text = '';
+  nameField.Text = '';
+  surnameField.Text = '';
+}
+
+void InsertTable;
+{
+  try
+  Clomosy.DBSQLiteQuery.SQL.Text = 
+    'INSERT INTO Users (Email, FirstName, LastName, Password) VALUES (''' +
+    mailField.Text + ''',''' +   // Email
+    nameField.Text + ''',''' +  // First name
+    surnameField.Text + ''',''' +  // Last name
+    passwordField.Text + ''')';  // Password
+    Clomosy.DBSQLiteQuery.OpenOrExecute();
+    ShowMessage('You have signed up successfully.');
+  except
+    ShowMessage('Exception class: ' + LastExceptionClassName + ' Exception Message: ' + LastExceptionMessage);
+    }
+}
+
+void SignUp;
+var 
+isFilled : Boolean
+{
+  if(isSignUpClicked)
+  {
+    isFilled = CheckBlanks;
+    if(isFilled)
+    {
+      isSignUpClicked  = False;
+      signInButton.Visible = not signInButton.Visible;
+      signUpLbl.Visible = not signUpLbl.Visible;
+      nameField.Visible = not nameField.Visible;
+      surnameField.Visible = not surnameField.Visible;
+      InsertTable;
+      ResetTexts;
+    }
+  }
+  else
+  {
+    signInButton.Visible = not signInButton.Visible;
+    signUpLbl.Visible = not signUpLbl.Visible;
+    nameField.Visible = not nameField.Visible;
+    surnameField.Visible = not surnameField.Visible;
+    isSignUpClicked = True;
+    ResetTexts;
+  }
+}
+
+void SignIn;
+{
+  try
+  Clomosy.DBSQLiteQuery.SQL.Text = 
+  'SELECT COUNT(*) AS number FROM Users WHERE Email = ' + QuotedStr(mailField.Text) + 'AND Password = ' + QuotedStr(passwordField.Text);
+  Clomosy.DBSQLiteQuery.OpenOrExecute();
+  if (Clomosy.DBSQLiteQuery.FieldByName('number').AsString == '1')
+  {
+    Clomosy.RunUnit('Game');
+  }
+  else  
+  {
+    ShowMessage('Login failed! Email or password is incorrect.');
+  }
+  except
+    ShowMessage('Exception class: ' + LastExceptionClassName + ' Exception Message: ' + LastExceptionMessage);
+  }
+}
+
+{
+  MainForm = TclGameForm.Create(Self);
+  MainForm.SetFormColor('#CBEDD5','',clGNone);
+  CreateTable;
+  
+  isSignUpClicked = False;
+  
+  topPanel = MainForm.AddNewProPanel(MainForm,'topPanel');
+  topPanel.Height = MainForm.clHeight * 0.3;
+  clComponent.SetupComponent(topPanel,'{"Align" : "Top", "BackgroundColor":"#62de83"}');
+
+  midPanel = MainForm.AddNewProPanel(MainForm,'midPanel');
+  midPanel.Height = MainForm.clHeight * 0.5;
+  midPanel.Width = MainForm.clWidth;
+  clComponent.SetupComponent(midPanel,'{"Align" : "Center", "BackgroundColor": "#d3de62"}');
+
+  mailField = MainForm.AddNewProEdit(midPanel,'mailField','E-Mail');
+  mailField.Width = midPanel.Width * 0.6;
+  mailField.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(mailField, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  mailField.Margins.Bottom = midPanel.Height * 0.8;
+  
+  passwordField = MainForm.AddNewProEdit(midPanel,'passwordField','Password');
+  passwordField.Width = midPanel.Width * 0.6;
+  passwordField.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(passwordField, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  passwordField.Margins.Bottom = midPanel.Height * 0.5;
+
+  signInButton = MainForm.AddNewProButton(midPanel,'signInButton','Sign In');
+  clComponent.SetupComponent(signInButton,'{"Align" : "Center"}');
+  signInButton.Width = midPanel.Width * 0.6;
+  signInButton.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(signInButton, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  signInButton.Margins.Bottom = midPanel.Height * 0.2;
+  
+  MainForm.AddNewEvent(signInButton,tbeOnClick,'SignIn');
+
+  signUpButton = MainForm.AddNewProButton(midPanel,'signUpButton','Sign Up');
+  clComponent.SetupComponent(signUpButton,'{"Align" : "Center"}');
+  signUpButton.Width = midPanel.Width * 0.6;
+  signUpButton.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(signUpButton, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  signUpButton.Margins.Top = midPanel.Height * 0.3;
+
+  signUpLbl = MainForm.AddNewProLabel(midPanel,'signUpLbl','');
+  signUpLbl.Text = 'Dont have an account?';
+  signUpLbl.Width = midPanel.Width * 0.6;
+  signUpLbl.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(signUpLbl,'{"Align" : "Center", "TextHorizontalAlign":"center"}');
+  signUpLbl.Margins.Top = midPanel.Height * 0.1;
+
+  MainForm.AddNewEvent(signUpButton,tbeOnClick,'SignUp');
+
+  nameField = MainForm.AddNewProEdit(midPanel,'nameField','Name');
+  nameField.Width = midPanel.Width * 0.25;
+  nameField.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(nameField, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  nameField.Margins.Bottom = midPanel.Height * 0.2;
+  nameField.Margins.Right = midPanel.Width * 0.35;
+  nameField.Visible = False;
+  nameField.SetFocus;
+  
+  surnameField = MainForm.AddNewProEdit(midPanel,'surnameField','Surname');
+  surnameField.Width = midPanel.Width * 0.25;
+  surnameField.Height = midPanel.Height * 0.1;
+  clComponent.SetupComponent(surnameField, '{"Align" : "Center", "RoundHeight" : 8, "RoundWidth" : 4, "BackgroundColor" : "#e0e0e0",
+  "BorderColor" : "#787777", "BorderWidth" : 4}');
+  surnameField.Margins.Bottom = midPanel.Height * 0.2;
+  surnameField.Margins.Left = midPanel.Width * 0.35;
+  surnameField.Visible = False;
+  
+  logoImg = MainForm.AddNewProImage(topPanel,'logoImg');
+  logoImg.Height = topPanel.Height * 0.7;
+  logoImg.Width = topPanel.Width * 0.7;
+  logoImg.Margins.Top = 10;
+  clComponent.SetupComponent(logoImg,'{"Align" : "Center","ImgUrl":"https://i.hizliresim.com/srkmabt.png", "ImgFit":"yes", "ImgStretch" : "yes"}');
+
+  titleLbl = MainForm.AddNewProLabel(topPanel,'titleLbl', 'WORLDMOJI');
+  titleLbl.Align = alMostBottom;
+  clComponent.SetupComponent(titleLbl,'{"TextSize" : 16, "TextHorizontalAlign" : "Center", "TextBold" : "yes"}');
+  
+  MainForm.AddNewEvent(MainForm,tbeOnVirtualKeyboardShown,'VirtualKeyboardShow');
+  MainForm.AddNewEvent(MainForm,tbeOnVirtualKeyboardHidden,'VirtualKeyboardHidden');
+  
+  MainForm.Run;
+}

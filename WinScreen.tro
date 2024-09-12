@@ -1,0 +1,30 @@
+var
+  MainForm : TclGameForm;
+  winLabel : TClProLabel;
+  restartButton : TClProButton;
+  
+void Restart;
+{
+  Clomosy.RunUnit('Game');
+}
+  
+{
+  MainForm = TclGameForm.Create(Self);
+  MainForm.SetFormColor('#CBEDD5','',clGNone);
+  MainForm.SetFormBGImage('https://i.hizliresim.com/s4h3yyf.png');
+  
+  winLabel = MainForm.AddNewProLabel(MainForm,'winLabel','YOU WON');
+  winLabel.Height = MainForm.clHeight * 0.2;
+  clComponent.SetupComponent(winLabel,'{"Align" : "Center", "TextSize" : 24, "TextBold" : "yes", "TextHorizontalAlign" : "Center",
+  "TextColor" : "#ffffff"}');
+  
+
+  restartButton = MainForm.AddNewProButton(MainForm,'restartButton','RESTART');
+  restartButton.Width = MainForm.clWidth * 0.6;
+  restartButton.Height = MainForm.clHeight * 0.05;
+  restartButton.Margins.Top = MainForm.clHeight * 0.3;
+  clComponent.SetupComponent(restartButton,'{"Align" : "Center", "RoundWidth" : 8, "RoundHeight" : 4, "BackgroundColor" : "#ffffff"}');
+  restartButton.onClick = 'Restart';
+  
+  MainForm.Run;
+}
